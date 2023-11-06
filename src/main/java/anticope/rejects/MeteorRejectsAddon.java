@@ -56,7 +56,6 @@ public class MeteorRejectsAddon extends MeteorAddon {
         modules.add(new ColorSigns());
         modules.add(new Confuse());
         modules.add(new CoordLogger());
-        modules.add(new CustomPackets());
         modules.add(new ExtraElytra());
         modules.add(new FullFlight());
         modules.add(new GamemodeNotifier());

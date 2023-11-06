@@ -2,6 +2,8 @@
 
 package anticope.rejects.utils.accounts;
 
+import anticope.rejects.mixin.MinecraftTexturesPayloadAccessor;
+import anticope.rejects.mixin.PropertyAccessor;
 import com.google.common.collect.Iterables;
 import com.google.gson.*;
 import com.mojang.authlib.Environment;
@@ -15,7 +17,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 import meteordevelopment.meteorclient.utils.network.Http;
-import net.minecraft.client.util.Session;
+import net.minecraft.client.session.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,7 +49,7 @@ public class CustomYggdrasilLogin {
                 throw new AuthenticationException(json.get("errorMessage").getAsString());
             }
             String token = json.get("accessToken").getAsString();
-            String uuid = json.get("selectedProfile").getAsJsonObject().get("id").getAsString();
+            UUID uuid = UUID.fromString(json.get("selectedProfile").getAsJsonObject().get("id").getAsString());
             String username = json.get("selectedProfile").getAsJsonObject().get("name").getAsString();
             return new Session(username, uuid, token, Optional.empty(), Optional.empty(), Session.AccountType.MOJANG);
         } catch (Exception e) {
@@ -55,46 +57,40 @@ public class CustomYggdrasilLogin {
         }
     }
 
-    public static class LocalYggdrasilApi implements Environment {
+    public static class LocalYggdrasilApi {
         private final String url;
 
         public LocalYggdrasilApi(String serverUrl) {
             this.url = serverUrl;
         }
 
-        @Override
-        public String getAuthHost() {
+        public String authHost() {
             return url + "/authserver";
         }
 
-        @Override
-        public String getAccountsHost() {
+        public String accountsHost() {
             return url + "/api";
         }
 
-        @Override
-        public String getSessionHost() {
+        public String sessionHost() {
             return url + "/sessionserver";
         }
 
-        @Override
-        public String getServicesHost() {
+        public String servicesHost() {
             return url + "/minecraftservices";
         }
 
-        @Override
-        public String getName() {
+        public String name() {
             return "Custom-Yggdrasil";
         }
 
-        @Override
-        public String asString() {
+        public String toString() {
             return new StringJoiner(", ", "", "")
-                    .add("authHost='" + getAuthHost() + "'")
-                    .add("accountsHost='" + getAccountsHost() + "'")
-                    .add("sessionHost='" + getSessionHost() + "'")
-                    .add("servicesHost='" + getServicesHost() + "'")
-                    .add("name='" + getName() + "'")
+                    .add("authHost='" + authHost() + "'")
+                    .add("accountsHost='" + accountsHost() + "'")
+                    .add("sessionHost='" + sessionHost() + "'")
+                    .add("servicesHost='" + servicesHost() + "'")
+                    .add("name='" + name() + "'")
                     .toString();
         }
     }
@@ -104,8 +100,8 @@ public class CustomYggdrasilLogin {
         private final PublicKey publicKey;
         private final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
 
-        public LocalYggdrasilMinecraftSessionService(YggdrasilAuthenticationService service, String serverUrl) {
-            super(service, new LocalYggdrasilApi(serverUrl));
+        public LocalYggdrasilMinecraftSessionService(YggdrasilAuthenticationService service, Proxy proxy, String serverUrl) {
+            super(service.getServicesKeySet(), proxy, (Environment) (Object) new LocalYggdrasilApi(serverUrl));
             String data = Http.get(serverUrl).sendString();
             JsonObject json = JsonParser.parseString(data).getAsJsonObject();
             this.publicKey = getPublicKey(json.get("signaturePublickey").getAsString());
@@ -144,17 +140,19 @@ public class CustomYggdrasilLogin {
 
             final MinecraftTexturesPayload result;
             try {
-                final String json = new String(org.apache.commons.codec.binary.Base64.decodeBase64(textureProperty.getValue()), StandardCharsets.UTF_8);
+                // TODO: replace with built-in base64 lib
+                final String json = new String(org.apache.commons.codec.binary.Base64.decodeBase64(((PropertyAccessor) (Object) textureProperty).getValue()), StandardCharsets.UTF_8);
                 result = gson.fromJson(json, MinecraftTexturesPayload.class);
             } catch (final JsonParseException e) {
                 LOGGER.error("Could not decode textures payload", e);
                 return new HashMap<>();
             }
 
-            if (result == null || result.getTextures() == null)
+            final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = ((MinecraftTexturesPayloadAccessor) (Object) result).getTextures();
+            if (result == null || textures == null)
                 return new HashMap<>();
 
-            return result.getTextures();
+            return textures;
         }
     }
 
@@ -162,7 +160,7 @@ public class CustomYggdrasilLogin {
         public final String server;
 
         public LocalYggdrasilAuthenticationService(Proxy proxy, String server) {
-            super(proxy, new LocalYggdrasilApi(server));
+            super(proxy, (Environment) (Object) new LocalYggdrasilApi(server));
             this.server = server;
         }
     }

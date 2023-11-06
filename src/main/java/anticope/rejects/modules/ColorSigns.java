@@ -35,7 +35,8 @@ public class ColorSigns extends Module {
     }
 
     private void checkWarning() {
-        String brand = mc.player.getServerBrand();
+        String brand = mc.player.networkHandler.getBrand();
+        MeteorRejectsAddon.LOG.info("Server brand: {}", brand);
         if (brand == null) return;
         if (brand.contains("Paper")) warning("You are on a paper server. Color signs won't work here");
     }

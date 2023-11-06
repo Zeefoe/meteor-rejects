@@ -13,15 +13,17 @@ import net.minecraft.client.network.ServerAddress;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.listener.ClientQueryPacketListener;
+import net.minecraft.network.packet.c2s.handshake.ConnectionIntent;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
+import net.minecraft.network.packet.s2c.query.PingResultS2CPacket;
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
-import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.server.ServerMetadata;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.profiler.PerformanceLog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +76,7 @@ public class ServerListPinger {
                 notifyDisconnectListeners();
             }
         }, 20000);
-        final ClientConnection clientConnection = ClientConnection.connect(new InetSocketAddress(InetAddress.getByName(serverAddress.getAddress()), serverAddress.getPort()), false);
+        final ClientConnection clientConnection = ClientConnection.connect(new InetSocketAddress(InetAddress.getByName(serverAddress.getAddress()), serverAddress.getPort()), false, (PerformanceLog) null);
         failedToConnect = false;
         this.clientConnections.add(clientConnection);
         entry.label = "multiplayer.status.pinging";
@@ -135,7 +137,7 @@ public class ServerListPinger {
                 }
             }
 
-            public void onPong(QueryPongS2CPacket packet) {
+            public void onPingResult(PingResultS2CPacket packet) {
                 long l = this.startTime;
                 long m = Util.getMeasuringTimeMs();
                 entry.ping = m - l;
@@ -160,7 +162,8 @@ public class ServerListPinger {
         });
 
         try {
-            clientConnection.send(new HandshakeC2SPacket(serverAddress.getAddress(), serverAddress.getPort(), NetworkState.STATUS));
+            // TODO: refactor, see https://wiki.vg/Protocol_version_numbers
+            clientConnection.send(new HandshakeC2SPacket(764, serverAddress.getAddress(), serverAddress.getPort(), ConnectionIntent.STATUS));
             clientConnection.send(new QueryRequestC2SPacket());
         } catch (Throwable var8) {
             LOGGER.error("Failed to ping server {}", serverAddress, var8);

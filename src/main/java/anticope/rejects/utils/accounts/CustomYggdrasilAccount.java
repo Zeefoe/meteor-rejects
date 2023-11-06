@@ -7,8 +7,10 @@ import meteordevelopment.meteorclient.mixin.MinecraftClientAccessor;
 import meteordevelopment.meteorclient.systems.accounts.Account;
 import meteordevelopment.meteorclient.systems.accounts.AccountType;
 import meteordevelopment.meteorclient.utils.misc.NbtException;
-import net.minecraft.client.util.Session;
+import net.minecraft.client.session.Session;
 import net.minecraft.nbt.NbtCompound;
+
+import java.net.Proxy;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -27,7 +29,7 @@ public class CustomYggdrasilAccount extends Account<CustomYggdrasilAccount> {
             Session session = CustomYggdrasilLogin.login(name, password, server);
 
             cache.username = session.getUsername();
-            cache.uuid = session.getUuid();
+            cache.uuid = session.getUuidOrNull().toString();
 
             return true;
         } catch (AuthenticationException e) {
@@ -38,8 +40,9 @@ public class CustomYggdrasilAccount extends Account<CustomYggdrasilAccount> {
     @Override
     public boolean login() {
         try {
-            CustomYggdrasilLogin.LocalYggdrasilAuthenticationService service = new CustomYggdrasilLogin.LocalYggdrasilAuthenticationService(((MinecraftClientAccessor) mc).getProxy(), server);
-            MinecraftSessionService sessService = new CustomYggdrasilLogin.LocalYggdrasilMinecraftSessionService(service, service.server);
+            Proxy proxy = ((MinecraftClientAccessor) mc).getProxy();
+            CustomYggdrasilLogin.LocalYggdrasilAuthenticationService service = new CustomYggdrasilLogin.LocalYggdrasilAuthenticationService(proxy, server);
+            MinecraftSessionService sessService = new CustomYggdrasilLogin.LocalYggdrasilMinecraftSessionService(service, proxy, service.server);
             applyLoginEnvironment(service, sessService);
 
             Session session = CustomYggdrasilLogin.login(name, password, server);
