@@ -12,6 +12,7 @@ import com.seedfinding.mccore.util.data.SpiralIterator;
 import com.seedfinding.mccore.util.pos.*;
 import com.seedfinding.mccore.version.MCVersion;
 import com.seedfinding.mcterrain.TerrainGenerator;
+import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 
@@ -159,10 +160,13 @@ public class WorldGenUtils {
             LOG.error(ex);
         }
         if (pos != null) return pos;
-        try {
-            pos = locateFeatureBlocks(feature);
-        } catch (Exception | Error ex) {
-            LOG.error(ex);
+
+        if (BaritoneUtils.IS_AVAILABLE) {
+            try {
+                pos = locateFeatureBlocks(feature);
+            } catch (Exception | Error ex) {
+                LOG.error(ex);
+            }
         }
         return pos;
     }

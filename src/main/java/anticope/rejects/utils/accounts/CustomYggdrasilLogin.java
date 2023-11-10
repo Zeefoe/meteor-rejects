@@ -2,6 +2,7 @@
 
 package anticope.rejects.utils.accounts;
 
+import anticope.rejects.MeteorRejectsAddon;
 import anticope.rejects.mixin.MinecraftTexturesPayloadAccessor;
 import anticope.rejects.mixin.PropertyAccessor;
 import com.google.common.collect.Iterables;
@@ -61,26 +62,32 @@ public class CustomYggdrasilLogin {
         private final String url;
 
         public LocalYggdrasilApi(String serverUrl) {
+            MeteorRejectsAddon.LOG.info("LocalYggrasilApi({}) called!", serverUrl);
             this.url = serverUrl;
         }
 
         public String authHost() {
+            MeteorRejectsAddon.LOG.info("LocalYggdrasilApi.authHost() called!");
             return url + "/authserver";
         }
 
         public String accountsHost() {
+            MeteorRejectsAddon.LOG.info("LocalYggdrasilApi.accountsHost() called!");
             return url + "/api";
         }
 
         public String sessionHost() {
+            MeteorRejectsAddon.LOG.info("LocalYggdrasilApi.sessionHost() called!");
             return url + "/sessionserver";
         }
 
         public String servicesHost() {
+            MeteorRejectsAddon.LOG.info("LocalYggdrasilApi.servicesHost() called!");
             return url + "/minecraftservices";
         }
 
         public String name() {
+            MeteorRejectsAddon.LOG.info("LocalYggdrasilApi.name() called!");
             return "Custom-Yggdrasil";
         }
 

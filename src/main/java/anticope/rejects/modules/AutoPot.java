@@ -1,11 +1,9 @@
 package anticope.rejects.modules;
 
-//import baritone.api.BaritoneAPI;
-
 import anticope.rejects.MeteorRejectsAddon;
-import baritone.api.BaritoneAPI;
 import meteordevelopment.meteorclient.events.entity.player.ItemUseCrosshairTargetEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -85,7 +83,7 @@ public class AutoPot extends Module {
     private int slot, prevSlot;
     private boolean drinking, splashing;
     private final List<Class<? extends Module>> wasAura = new ArrayList<>();
-    private boolean wasBaritone;
+    private boolean wasBaritone = false;
     
     public AutoPot() {
         super(MeteorRejectsAddon.CATEGORY, "auto-pot", "Automatically Drinks Potions");
@@ -221,10 +219,9 @@ public class AutoPot extends Module {
             }
         }
         // Pause baritone
-        wasBaritone = false;
-        if (pauseBaritone.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
-           wasBaritone = true;
-           BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
+        if (pauseBaritone.get() && PathManagers.get().isPathing() && !wasBaritone) {
+            wasBaritone = true;
+            PathManagers.get().pause();
         }
     }
     private void startSplashing() {
@@ -246,10 +243,9 @@ public class AutoPot extends Module {
             }
         }
         // Pause baritone
-        wasBaritone = false;
-        if (pauseBaritone.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
-           wasBaritone = true;
-           BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
+        if (pauseBaritone.get() && PathManagers.get().isPathing() && !wasBaritone) {
+            wasBaritone = true;
+            PathManagers.get().pause();
         }
     }
     private void drink() {
@@ -281,7 +277,8 @@ public class AutoPot extends Module {
         }
         // Resume baritone
         if (pauseBaritone.get() && wasBaritone) {
-           BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
+            wasBaritone = false;
+            PathManagers.get().resume();
         }
     }
     private void stopSplashing() {
@@ -302,7 +299,8 @@ public class AutoPot extends Module {
         }
         // Resume baritone
         if (pauseBaritone.get() && wasBaritone) {
-           BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
+            wasBaritone = false;
+            PathManagers.get().resume();
         }
     }
     private double truehealth() {
