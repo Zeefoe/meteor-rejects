@@ -7,12 +7,7 @@ concurrency:
   group: "build-1.20"
   cancel-in-progress: true
 
-on:
-  push:
-    branches: [ master ]
-    paths-ignore:
-      - '*.md'
-      
+on: workflow_dispatch
 
 jobs:
   build:
